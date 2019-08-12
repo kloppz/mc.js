@@ -1,10 +1,10 @@
 import { resolvers } from './resolvers'
-import { socketIO, prisma } from './lib/server'
+import { prisma, socketIO } from './lib/server'
 
 import debug from 'debug'
 import { GraphQLServer, PubSub } from 'graphql-yoga'
 
-const log = output => debug('server')(output)
+const log = output => debug('server')(JSON.stringify(output, null, 2))
 
 const pubsub = new PubSub()
 

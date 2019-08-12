@@ -5,6 +5,7 @@ import Helpers from '../../../utils/helpers'
 import BlockDict from '../../../config/blockDict'
 
 import classes from './debug.module.css'
+import './fpsmeter'
 
 function Debug(container, player, world) {
   let display = process.env.NODE_ENV === 'development'
@@ -31,6 +32,12 @@ function Debug(container, player, world) {
 
   if (display) Helpers.applyStyle(wrapper, { display: 'flex' })
 
+  const fpsMeter = new window.FPSMeter(wrapper, {
+    interval: 100,
+    display: 'none',
+    maxFPS: 100
+  })
+
   /* -------------------------------------------------------------------------- */
   /*                                 LEFT PANEL                                 */
   /* -------------------------------------------------------------------------- */
@@ -41,7 +48,7 @@ function Debug(container, player, world) {
   const chunkXYZ = document.createElement('p')
   const days = document.createElement('p')
 
-  title.innerHTML = 'Minecraft JS (dev/beta/vanilla)'
+  title.innerHTML = 'MCJS (dev/beta/vanilla)'
   fps.innerHTML = '0 fps'
   xyz.innerHTML = 'XYZ: 0 / 0 / 0'
   blockXYZ.innerHTML = 'Block: 0 0 0'
@@ -96,6 +103,8 @@ function Debug(container, player, world) {
   this.setMinFPS = f => (minFPS = f)
   this.getMinFPS = () => minFPS
 
+  this.getFPSMeter = () => fpsMeter
+
   this.setDaysVal = v => (daysVal = v)
   this.getDaysVal = () => daysVal
 
@@ -103,28 +112,16 @@ function Debug(container, player, world) {
   player.controls.setDebugControl(this)
 }
 
-Debug.prototype.calcFPS = (function() {
-  let lastLoop = new Date().getMilliseconds()
-  let count = 1
-  let fps = 0
+Debug.prototype.tickStart = function() {
+  this.getFPSMeter().tickStart()
+}
 
-  return function() {
-    const currentLoop = new Date().getMilliseconds()
-    if (lastLoop > currentLoop) {
-      fps = count
-      count = 1
-    } else {
-      count += 1
-    }
-    lastLoop = currentLoop
-    return fps
-  }
-})()
+Debug.prototype.tick = function() {
+  const fpsMeterRef = this.getFPSMeter()
 
-Debug.prototype.update = function() {
   if (!this.getDisplay()) return
 
-  const newFPS = this.calcFPS()
+  const newFPS = Helpers.round(fpsMeterRef.fps, 0)
   const worldRef = this.getWorld()
   const playerRef = this.getPlayer()
   const playerPos = playerRef.getCoordinates()
@@ -146,8 +143,8 @@ Debug.prototype.update = function() {
   // prettier-ignore
   this.getDOM_chunkXYZ().innerHTML = `Chunk: ${playerChunk.x} ${playerChunk.y} ${playerChunk.z} in ${playerChunk.coordx} ${playerChunk.coordy} ${playerChunk.coordz}`
 
-  this.getDOM_FPS().innerHTML = `${newFPS} fps [${this.getMinFPS() || 0} - ${this.getMaxFPS() ||
-    0}]`
+  this.getDOM_FPS().innerHTML = `${newFPS} fps [${this.getMinFPS() ||
+    0} - ${this.getMaxFPS() || 0}]`
 
   const targetedTag = BlockDict[worldRef.getTargetBlockType()]
   if (targetedTag) this.getDOM_targetedBlock().innerHTML = targetedTag.tag
@@ -157,6 +154,8 @@ Debug.prototype.update = function() {
     this.setDaysVal(worldDays)
     this.getDOM_days().innerHTML = `Day ${worldDays}`
   }
+
+  fpsMeterRef.tick()
 }
 
 Debug.prototype.toggle = function() {

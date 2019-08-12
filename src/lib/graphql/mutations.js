@@ -6,7 +6,9 @@ import * as Yup from 'yup'
  */
 export const REGISTER_MUTATION = gql`
   mutation Register($username: String!, $email: String!, $password: String!) {
-    createUser(data: { username: $username, email: $email, password: $password }) {
+    createUser(
+      data: { username: $username, email: $email, password: $password }
+    ) {
       token
     }
   }
@@ -20,9 +22,25 @@ export const LOGIN_MUTATION = gql`
   }
 `
 
+export const UPDATE_SETTINGS_MUTATION = gql`
+  mutation UpdateSettings($id: ID!, $renderDistance: Int) {
+    updateSettings(data: { id: $id, renderDistance: $renderDistance }) {
+      id
+      renderDistance
+    }
+  }
+`
+
 export const CREATE_WORLD_MUTATION = gql`
-  mutation CreateWorld($name: String!, $seed: String!, $gamemode: Gamemode!) {
-    createWorld(data: { name: $name, seed: $seed, gamemode: $gamemode }) {
+  mutation CreateWorld(
+    $name: String!
+    $seed: String!
+    $gamemode: Gamemode!
+    $type: WorldType!
+  ) {
+    createWorld(
+      data: { name: $name, seed: $seed, gamemode: $gamemode, type: $type }
+    ) {
       id
     }
   }

@@ -19,16 +19,18 @@ class World extends Stateful {
   constructor(worldData, scene, apolloClient, ioClient, container, playerData) {
     super({ isSetup: false })
 
-    const { id, name, seed, time, days, changedBlocks } = worldData
+    const { id, name, seed, type, time, days, changedBlocks } = worldData
 
     this.data = {
       id,
       name,
       seed,
+      type,
       time,
       days,
       y: playerData.y,
-      playerId: playerData.id
+      playerId: playerData.id,
+      user: playerData.user
     }
 
     this.scene = scene
@@ -42,7 +44,7 @@ class World extends Stateful {
     this.playersManager = new PlayersManager(scene)
     this.chunkManager = new ChunkManager(
       scene,
-      seed,
+      this,
       this.resourceManager,
       this.workerManager,
       changedBlocks

@@ -11,6 +11,7 @@ type Mutation {
   login(data: LoginUserInput!): AuthPayload!
   deleteUser: User!
   updateUser(data: UpdateUserInput!): User!
+  updateSettings(data: UpdateSettingsInput!): Settings!
 
   # WORLD
   createWorld(data: CreateWorldInput!): World!
@@ -20,6 +21,7 @@ type Mutation {
   updateBlock(data: UpdateBlockInput!): Block!
   deleteWorld(worldId: ID!): Boolean!
   runCommand(data: RunCommandInput!): Boolean!
+  requestChunks(data: RequestChunksInput!): Boolean!
 }
 
 type Subscription {
@@ -45,6 +47,7 @@ type User {
   email: String!
   password: String!
   worlds: [World!]!
+  settings: Settings!
   updatedAt: String!
   createdAt: String!
 }
@@ -53,6 +56,7 @@ type World {
   id: ID!
   name: String!
   seed: String!
+  type: WorldType!
   time: Float!
   timeChanger: Float
   days: Int!
@@ -81,6 +85,11 @@ type Player {
   dirx: Float!
   diry: Float!
   inventory: Inventory!
+}
+
+type Settings {
+  id: ID!
+  renderDistance: Int!
 }
 
 type Block {
@@ -119,6 +128,7 @@ input CreateWorldInput {
   name: String!
   seed: String!
   gamemode: Gamemode!
+  type: WorldType!
 }
 
 input CreatePlayerInput {
@@ -131,6 +141,11 @@ input UpdateWorldInput {
   name: String
   time: Float
   days: Int
+}
+
+input UpdateSettingsInput {
+  id: ID!
+  renderDistance: Int
 }
 
 input UpdatePlayerInput {
@@ -158,6 +173,12 @@ input RunCommandInput {
   command: String!
 }
 
+input RequestChunksInput {
+  worldId: ID!
+  playerId: ID!
+  chunks: [String!]! # array of chunk reps ("x:z")
+}
+
 type AuthPayload {
   token: String!
   user: User!
@@ -181,6 +202,11 @@ enum MessageType {
   PLAYER
   SERVER
   INFO
+}
+
+enum WorldType {
+  DEFAULT
+  SUPERFLAT
 }
 
 type BlockSubscriptionPayload {

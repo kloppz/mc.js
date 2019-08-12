@@ -8,13 +8,11 @@ import ChunkGenWorker from './chunkGen.worker'
 import * as THREE from 'three'
 
 const MAX_WORKER_COUNT = Config.tech.maxWorkerCount
-const HORZ_D = Config.player.render.horzD
-const VERT_D = Config.player.render.vertD
 
 class ChunkManager {
-  constructor(scene, seed, resourceManager, workerManager, changedBlocks) {
+  constructor(scene, world, resourceManager, workerManager, changedBlocks) {
     this.scene = scene
-    this.seed = seed
+    this.world = world
 
     this.resourceManager = resourceManager
     this.workerManager = workerManager
@@ -51,15 +49,10 @@ class ChunkManager {
 
     /** WORKER */
     this.workerManager.initChunkPool(ChunkGenWorker, this, {
-      seed: this.seed,
+      seed: this.world.data.seed,
+      type: this.world.data.type,
       changedBlocks
     })
-
-    // this.workerManager.queueGeneralChunk({
-    //   cmd: 'GET_HIGHEST',
-    //   x: 0,
-    //   z: 0
-    // })
   }
 
   update = () => {
@@ -75,9 +68,11 @@ class ChunkManager {
     let count = 0
     let allGood = true
 
-    for (let x = coordx - HORZ_D; x <= coordx + HORZ_D; x++) {
-      for (let z = coordz - HORZ_D; z <= coordz + HORZ_D; z++) {
-        for (let y = coordy - VERT_D; y <= coordy + VERT_D; y++) {
+    const RENDER_D = this.world.data.user.settings.renderDistance
+
+    for (let x = coordx - RENDER_D; x <= coordx + RENDER_D; x++) {
+      for (let z = coordz - RENDER_D; z <= coordz + RENDER_D; z++) {
+        for (let y = coordy - RENDER_D + 1; y <= coordy + RENDER_D - 1; y++) {
           updatedChunks[this.getChunkRep(x, y, z)] = true
 
           const tempChunk = this.getChunkFromCoords(x, y, z)
@@ -145,7 +140,11 @@ class ChunkManager {
 
     const [geoJSON, materials] = meshData
 
-    const mesh = Mesher.processMeshData(geoJSON, materials, this.resourceManager)
+    const mesh = Mesher.processMeshData(
+      geoJSON,
+      materials,
+      this.resourceManager
+    )
 
     if (!mesh) return
 
@@ -164,7 +163,11 @@ class ChunkManager {
   getChunkFromRep = rep => this.chunks[rep]
 
   getTypeAt = (x, y, z) => {
-    const { coordx, coordy, coordz } = Helpers.globalBlockToChunkCoords({ x, y, z })
+    const { coordx, coordy, coordz } = Helpers.globalBlockToChunkCoords({
+      x,
+      y,
+      z
+    })
     const { x: bx, y: by, z: bz } = Helpers.globalBlockToChunkBlock({ x, y, z })
     const chunk = this.getChunkFromCoords(coordx, coordy, coordz)
 

@@ -1,6 +1,10 @@
-# MinecraftJS
+# MC.JS
 
-MinecraftJS brings the best-selling PC game "Minecraft" into the web with the power of javascript.
+MC.JS brings the best-selling PC game "Minecraft" into the web with the power of javascript.
+
+### Disclaimer
+
+:pushpin: This project is a work in progress. There's still a lot of features waiting to be implemented, and the game is far from being the actual game.
 
 # Motivation
 
@@ -12,17 +16,17 @@ These are some screenshots taken directly from the project.
 
 ## User Authentication
 
-![](https://i.imgur.com/1jwIc4x.jpg)
+![](https://i.imgur.com/7v5dasa.png)
 
-![](https://i.imgur.com/VKyEP2F.jpg)
+![](https://i.imgur.com/5yYMYGH.png)
 
-![](https://i.imgur.com/GUyan19.jpg)
+![](https://i.imgur.com/9Tr3GmL.png)
 
-![](https://i.imgur.com/u52JZ3n.jpg)
+![](https://i.imgur.com/vgpqSCV.png)
 
 ## Neatly Styled Game UI
 
-![](https://i.imgur.com/YoVA8P6.jpg)
+![](https://i.imgur.com/PoYFpdQ.jpg)
 
 ![](https://i.imgur.com/du58Ifa.png)
 
@@ -42,6 +46,7 @@ Javascript.
 
 ## Frontend
 
+- [three.js](https://threejs.org)
 - [react.js](https://reactjs.org/)
 - [react-router](https://github.com/ReactTraining/react-router)
 - [apollo](https://www.apollographql.com/)
@@ -64,11 +69,14 @@ Javascript.
 
 # Installation
 
-Before cloning the repo or doing anything, be sure to install [docker](https://www.docker.com/), [node](https://nodejs.org/en/), [prisma-cli](https://www.prisma.io/docs/prisma-cli-and-configuration/using-the-prisma-cli-alx4/) and [graphql-cli](https://github.com/graphql-cli/graphql-cli#install) on your computer. After that, run the following commands:
+Before cloning the repo or doing anything, be sure to install [docker](https://www.docker.com/) and [node](https://nodejs.org/en/) on your computer. After that, run the following commands:
 
 ```bash
+# Install the prerequisite libraries
+yarn global add prisma graphql-cli
+
 # Clone the repository
-git clone https://github.com/ian13456/minecraft.js.git
+git clone https://github.com/ian13456/mc.js.git
 
 # Download packages for both server and client
 yarn
@@ -88,8 +96,10 @@ After these commands, visit `localhost:3000`
 
 # Note
 
-:pushpin: MinecraftJS runs fastest on either Opera or Chrome.
+:pushpin: MC.JS runs fastest on either Opera or Chrome.
 
 # Sources
 
 - [Resource Pack Used](http://www.9minecraft.net/paper-cut-resource-pack/)
+- [Multiplayer Player Mesh](https://github.com/bs-community/skinview3d)
+- [Home Page Panorama Library](https://pannellum.org)

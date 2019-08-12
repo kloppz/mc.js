@@ -3,10 +3,11 @@ import PlayerClient from './playerClient'
 import { Vector2, Vector3 } from 'three'
 
 function PlayersManager(scene) {
-  const players = {}
+  const players = new Map()
 
   this.getPlayers = () => players
   this.getScene = () => scene
+  this.getPlayerCount = () => Object.keys(players).length
 }
 
 PlayersManager.prototype.register = function(node) {
@@ -18,14 +19,14 @@ PlayersManager.prototype.register = function(node) {
     new Vector2(dirx, diry)
   )
 
-  this.getPlayers()[username] = newClient
+  this.getPlayers().set(username, newClient)
 
   newClient.addSelf(this.getScene())
 }
 
 PlayersManager.prototype.update = function(data) {
   const { username, x, y, z, dirx, diry } = data
-  const player = this.getPlayers()[username]
+  const player = this.getPlayers().get(username)
   if (!player) this.register(data)
   else player.update(x, y, z, dirx, diry)
 }

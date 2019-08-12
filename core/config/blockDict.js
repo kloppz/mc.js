@@ -1,4 +1,4 @@
-const projectTag = 'minecraft-js'
+const projectTag = 'mc-js'
 
 const BlockDict = {
   0: {
@@ -16,6 +16,10 @@ const BlockDict = {
   3: {
     name: 'dirt',
     tag: `${projectTag}:dirt`
+  },
+  7: {
+    name: 'bedrock',
+    tag: `${projectTag}:bedrock`
   },
   9: {
     name: 'water',
@@ -44,3 +48,17 @@ const BlockDict = {
 }
 
 export default BlockDict
+
+export const BLOCKS = {
+  EMPTY: 0,
+  STONE: 1,
+  GRASS: 2,
+  DIRT: 3,
+  BEDROCK: 7,
+  WATER: 9,
+  SAND: 12,
+  LOG_OAK: 17,
+  LEAVES_OAK: 18,
+  TALLGRASS: 31,
+  STAINED_GLASS: 95
+}

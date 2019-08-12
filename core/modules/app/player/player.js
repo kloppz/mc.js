@@ -107,15 +107,10 @@ class Player extends Stateful {
       }
     }, 500)
 
-    this.posSocketUpdater = window.requestInterval(() => {
-      const playerCoords = this.getCoordinates(3)
-      const playerDir = this.getDirections()
-
-      this.ioClient.emit('position', {
-        playerCoords,
-        playerDir
-      })
-    }, 100)
+    this.posSocketUpdater = window.requestInterval(
+      () => this.ioClient.emit('position', this.getPosDirData()),
+      100
+    )
   }
 
   initSubscriptions = () => {
@@ -156,12 +151,15 @@ class Player extends Stateful {
 
   removeUpdaters = () => {
     window.clearRequestInterval(this.posUpdater)
-    window.clearRequestInterval(this.posSocketUpdater)
+
+    if (this.posSocketUpdater) {
+      document.removeEventListener('multiplayer', this.startPositionUpdater)
+      window.clearRequestInterval(this.posSocketUpdater)
+    }
   }
 
   terminate = () => {
     this.playerSubscription.unsubscribe()
-    // delete this.playerSubscription
     this.removeUpdaters()
   }
 
@@ -183,6 +181,15 @@ class Player extends Stateful {
   getPosition = () => this.controls.getObject().position
 
   getObject = () => this.controls.getObject()
+
+  getPosDirData = () => {
+    const playerCoords = this.getCoordinates(3)
+    const playerDir = this.getDirections()
+    return {
+      playerCoords,
+      playerDir
+    }
+  }
 
   /* -------------------------------------------------------------------------- */
   /*                                   SETTERS                                  */

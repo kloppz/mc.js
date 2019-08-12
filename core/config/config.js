@@ -1,6 +1,7 @@
 /**
  * THIS IS WHERE ALL THE CONSTANTS LIVE
  */
+import { BLOCKS } from './blockDict'
 
 const Config = {
   tech: {
@@ -121,10 +122,6 @@ const Config = {
       posY: 4.49,
       posZ: 5.53
     },
-    render: {
-      horzD: 2,
-      vertD: 1
-    },
     reachDst: 7,
     headBodyDeg: Math.PI / 4
   },
@@ -142,11 +139,19 @@ const Config = {
   },
   world: {
     gravity: -16,
-    maxWorldHeight: 256,
-    waterLevel: 62,
     waterColor: 0x0084ff,
     generation: {
+      superflatGeneration: {
+        // TODO: make this customizable
+        maxHeight: 5,
+        types: {
+          top: BLOCKS.GRASS,
+          middle: BLOCKS.DIRT
+        }
+      },
       classicGeneration: {
+        maxWorldHeight: 256,
+        waterLevel: 62,
         swampland: {
           constants: {
             scale: 1.5,
@@ -161,9 +166,9 @@ const Config = {
             grassScale: 10
           },
           types: {
-            top: 2,
-            underTop: 3,
-            beach: 12
+            top: BLOCKS.GRASS,
+            underTop: BLOCKS.DIRT,
+            beach: BLOCKS.SAND
           }
         },
         mountains: {
@@ -180,9 +185,9 @@ const Config = {
             grassScale: 0.6
           },
           types: {
-            top: 2,
-            underTop: 3,
-            beach: 12
+            top: BLOCKS.GRASS,
+            underTop: BLOCKS.DIRT,
+            beach: BLOCKS.SAND
           }
         }
       }
