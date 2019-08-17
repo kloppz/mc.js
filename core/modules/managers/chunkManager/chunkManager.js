@@ -19,6 +19,7 @@ class ChunkManager {
 
     this.dirtyChunks = []
     this.chunks = {}
+    this.blocksInProgress = {}
 
     this.isReady = false
 
@@ -175,6 +176,15 @@ class ChunkManager {
 
     return chunk.getBlock(bx, by, bz)
   }
+
+  checkBusyBlock = (x, y, z) =>
+    this.blocksInProgress[Helpers.get3DCoordsRep(x, y, z)]
+
+  tagBusyBlock = (x, y, z) =>
+    (this.blocksInProgress[Helpers.get3DCoordsRep(x, y, z)] = true)
+
+  untagBusyBlock = (x, y, z) =>
+    delete this.blocksInProgress[Helpers.get3DCoordsRep(x, y, z)]
 }
 
 export default ChunkManager

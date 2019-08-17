@@ -52,3 +52,17 @@ export const WORLD_SUBSCRIPTION = gql`
     }
   }
 `
+
+export const BLOCK_SUBSCRIPTION = gql`
+  subscription Block($worldId: ID!) {
+    block(worldId: $worldId) {
+      mutation
+      node {
+        type
+        x
+        y
+        z
+      }
+    }
+  }
+`

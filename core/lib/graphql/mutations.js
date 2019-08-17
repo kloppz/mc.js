@@ -56,3 +56,26 @@ export const RUN_COMMAND_MUTATION = gql`
     )
   }
 `
+
+export const UPDATE_BLOCK_MUTATION = gql`
+  mutation UpdateBlock(
+    $worldId: ID!
+    $type: Int!
+    $x: Int!
+    $y: Int!
+    $z: Int!
+  ) {
+    updateBlock(
+      data: { type: $type, x: $x, y: $y, z: $z }
+      where: { id: $worldId }
+    ) {
+      world {
+        id
+      }
+      x
+      y
+      z
+      type
+    }
+  }
+`

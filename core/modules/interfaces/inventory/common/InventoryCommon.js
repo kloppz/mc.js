@@ -14,12 +14,18 @@ class InventoryCommon {
   }
 
   add = (type, count) => {
+    console.log('add', type, count)
     let tempCount = count
 
     // Appending to existing slots with same type
     for (let i = 0; i < this.items.length; i++) {
       const slot = this.items[i]
-      if (slot.type === type) {
+      if (slot.isEmpty) {
+        const leftover = slot.set(type, tempCount)
+
+        if (!leftover) return 0
+        tempCount = leftover
+      } else if (slot.type === type) {
         if (slot.isFull) continue
 
         const leftover = slot.append(tempCount)
@@ -28,17 +34,6 @@ class InventoryCommon {
         tempCount = leftover
       }
     }
-
-    for (let i = 0; i < this.items.length; i++) {
-      const slot = this.items[i]
-      if (slot.isEmpty) {
-        const leftover = slot.set(type, tempCount)
-
-        if (!leftover) return 0
-        tempCount = leftover
-      }
-    }
-
     return tempCount
   }
 

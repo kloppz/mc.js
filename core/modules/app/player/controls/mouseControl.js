@@ -28,21 +28,22 @@ class MouseControl {
     if (typeof this.mouseKey === 'number') {
       switch (this.mouseKey) {
         case 0: {
-          console.log('MOUSE 1')
+          // console.log('MOUSE 1')
           // Left Key
-          // if (this.status.isCreative && this.canBreakBlock) {
-          //     this.world.breakBlock(false)
-          //     this.canBreakBlock = false
-          //     const canBreakBlockTimeout = window.requestTimeout(() => {
-          //         this.canBreakBlock = true
-          //         window.clearRequestTimeout(canBreakBlockTimeout)
-          //     }, 200)
+          if (this.status.isCreative && this.canBreakBlock) {
+            this.world.breakBlock(true)
+            this.canBreakBlock = false
+            const canBreakBlockTimeout = window.requestTimeout(() => {
+              this.canBreakBlock = true
+              window.clearRequestTimeout(canBreakBlockTimeout)
+            }, 200)
+          }
           // } else if (this.status.isSurvival && !this.breakBlockCountdown)
           //     this._startBreakingBlock()
           break
         }
         case 2: {
-          console.log('MOUSE 2')
+          // console.log('MOUSE 2')
           // Right Key
           //   if (!this.canPlaceBlock) break
 

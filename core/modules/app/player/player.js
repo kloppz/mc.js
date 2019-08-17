@@ -64,7 +64,8 @@ class Player extends Stateful {
       container,
       inventory.cursor,
       inventory.data,
-      resourceManager
+      resourceManager,
+      this.updatePlayer
     )
 
     /** CONTROL CENTER */
@@ -209,6 +210,11 @@ class Player extends Stateful {
     this.playerSubscription.unsubscribe()
     // delete this.playerSubscription
     this.removeUpdaters()
+  }
+
+  obtain = (type, count) => {
+    // TODO: implement if inventory is full
+    this.inventory.add(type, count)
   }
 
   /* -------------------------------------------------------------------------- */

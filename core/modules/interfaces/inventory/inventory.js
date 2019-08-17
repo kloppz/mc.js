@@ -10,6 +10,7 @@ class Inventory {
     this.worldId = worldId
 
     this.hotbar = new Hotbar(cursor, hotbar, resourceManager)
+
     this.initDom(container)
   }
 
@@ -56,6 +57,25 @@ class Inventory {
       })
 
     return { armor, backpack, hotbar }
+  }
+
+  add = (type, count) => {
+    if (count === 0) return
+
+    const leftover = this.hotbar.add(type, count)
+    // if (leftover) leftover = this.backpack.add(type, count)
+
+    // This means inventory is changed.
+    if (leftover !== count) {
+      // TODO: implement backpack
+      // this.updateInventory()
+    }
+  }
+
+  getInventoryToDatabase = () => {
+    return `ARMOR:0;0;0;0|BACKPACK:0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;|${this.hotbar.getDatabaseRepresentation(
+      'HOTBAR'
+    )}`
   }
 
   /* -------------------------------------------------------------------------- */

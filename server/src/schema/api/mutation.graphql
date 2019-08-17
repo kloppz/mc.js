@@ -12,7 +12,7 @@ type Mutation {
   # createPlayer(data: CreatePlayerInput!): Boolean!
   # updateWorld(data: UpdateWorldInput!): World!
   # updatePlayer(data: UpdatePlayerInput!): Player!
-  # updateBlock(data: UpdateBlockInput!): Block!
+  updateBlock(data: UpdateBlockInput!): Block
   # deleteWorld(worldId: ID!): Boolean!
   runCommand(data: RunCommandInput!): Boolean!
   requestChunks(data: RequestChunksInput!): Boolean!

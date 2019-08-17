@@ -92,7 +92,6 @@ class Slot {
   /* -------------------------------------------------------------------------- */
   set = (type, count) => {
     const leftover = count - 64
-
     this.setType(type)
     this.setCount(count > 64 ? 64 : count)
 
@@ -114,7 +113,7 @@ class Slot {
   setGuiItem = type => {
     if (type === 0) this.setTexture(null)
     else {
-      const image = this.resourceManager.getBlockImg(type)
+      const image = this.resourceManager.getTexture(type, 'side')
       this.setTexture(image)
     }
   }
@@ -123,7 +122,7 @@ class Slot {
     if (!image) Helpers.applyStyle(this.gui.item, { opacity: 0 })
     else {
       Helpers.applyStyle(this.gui.item, { opacity: 1 })
-      this.gui.item.src = image.side
+      this.gui.item.src = image
     }
   }
 

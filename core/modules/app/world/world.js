@@ -2,14 +2,17 @@ import { ChunkManager, WorkerManager, PlayersManager } from '../../managers'
 import Helpers from '../../../utils/helpers'
 import Stateful from '../../../lib/stateful/stateful'
 import { Chat } from '../../interfaces'
+import Config from '../../../config/config'
 import {
   UPDATE_WORLD_MUTATION,
-  WORLD_SUBSCRIPTION
+  WORLD_SUBSCRIPTION,
+  UPDATE_BLOCK_MUTATION
   // OTHER_PLAYERS_SUBSCRIPTION
 } from '../../../lib/graphql'
 
 import createSky from './sky/sky'
 
+const CHUNK_SIZE = Config.chunk.size
 class World extends Stateful {
   constructor(
     worldData,
@@ -23,7 +26,7 @@ class World extends Stateful {
     super({ isSetup: false })
 
     const { id, name, seed, type, time, days, changedBlocks } = worldData
-
+    this.id = id
     this.data = {
       id,
       name,
@@ -237,6 +240,64 @@ class World extends Stateful {
   }
 
   getIsReady = () => this.chunkManager.isReady
+
+  breakBlock = (shouldGetBlock = true) => {
+    if (!this.targetBlock) return // do nothing if no blocks are selected
+
+    const todo = obtainedType => {
+      console.log(obtainedType)
+      if (obtainedType === 0 || !shouldGetBlock) return
+      this.player.obtain(obtainedType, 1)
+    }
+
+    this.updateBlock(0, this.targetBlock, todo)
+  }
+
+  /**
+   * General function controlling the worker task distribution
+   * of placing/breaking blocks.
+   *
+   * @param {Int} type - Type of the prompted block.
+   * @param {Object} blockData - Information about the prompted block
+   *                    such as chunk coordinates and block position.
+   * @param {Function} todo - Callback to be called after notifying the
+   *                    workers about the changes to regenerate.
+   */
+  updateBlock = (type, blockData, todo) => {
+    const {
+      chunk: { cx, cy, cz },
+      block
+    } = blockData
+
+    const mappedBlock = {
+      x: cx * CHUNK_SIZE + block.x,
+      y: cy * CHUNK_SIZE + block.y,
+      z: cz * CHUNK_SIZE + block.z
+    }
+    const parentChunk = this.chunkManager.getChunkFromCoords(cx, cy, cz)
+
+    const { x, y, z } = block
+    // console.log(parentChunk.getBlock(x, y, z))
+    if (this.chunkManager.checkBusyBlock(x, y, z)) return
+    this.chunkManager.tagBusyBlock(x, y, z)
+    console.log(type, this.data.id, mappedBlock)
+    // Communicating with server
+
+    this.apolloClient
+      .mutate({
+        mutation: UPDATE_BLOCK_MUTATION,
+        variables: {
+          worldId: this.data.id,
+          type,
+          ...mappedBlock
+        }
+      })
+      .then(() => {
+        const obtainedType = parentChunk.getBlock(x, y, z)
+        todo(obtainedType)
+      })
+      .catch(err => console.error(err))
+  }
 }
 
 export default World
