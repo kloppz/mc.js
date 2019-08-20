@@ -163,6 +163,8 @@ class ChunkManager {
 
   getChunkFromRep = rep => this.chunks[rep]
 
+  getChunks = () => this.chunks
+
   getTypeAt = (x, y, z) => {
     const { coordx, coordy, coordz } = Helpers.globalBlockToChunkCoords({
       x,

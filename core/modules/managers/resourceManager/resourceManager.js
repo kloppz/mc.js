@@ -21,7 +21,7 @@ class ResourceManager {
   /* -------------------------------------------------------------------------- */
   getMaterial = (id, geo, face) => this.matMan.get(id, geo, face)
 
-  getGeometry = face => this.geoMan.get(face)
+  getGeometry = face => this.geoMan.getPure(face)
 
   getGeometryWLighting = (face, lighting, smoothLighting, type) =>
     this.geoMan.getWLighting(face, lighting, smoothLighting, type)

@@ -3,6 +3,8 @@ import Config from '../../../config/config'
 import WorkerPool from './workerPool'
 import TaskQueue from './taskQueue'
 
+import * as THREE from 'three'
+
 // import * as THREE from 'three'
 
 const DIMENSION = Config.block.dimension
@@ -53,6 +55,33 @@ class WorkerManager {
           [this.chunkManager.meshChunk, [temp, meshData]]
         ])
 
+        break
+      }
+      case 'UPDATE_BLOCK': {
+        console.log('UPDATED', data)
+        const {
+          blocks,
+          block: { x, y, z },
+          meshData,
+          chunkName
+        } = data
+        const temp = this.chunkManager.getChunkFromRep(chunkName)
+        this.chunkTaskQueue.addTasks([
+          [temp.setData, blocks],
+          [this.chunkManager.meshChunk, [temp, meshData]]
+        ])
+        this.chunkTaskQueue.addTask(() => {
+          // Remove old then add new to scene
+          const obj = this.world.scene.getObjectByName(chunkName)
+          if (obj) this.world.scene.remove(obj)
+          const mesh = temp.getMesh()
+          if (mesh instanceof THREE.Object3D) this.world.scene.add(mesh)
+          this.chunkManager.untagBusyBlock(x, y, z)
+
+          // Reset everything
+          this.world.targetBlock = null
+          this.world.potentialBlock = null
+        })
         break
       }
       default:

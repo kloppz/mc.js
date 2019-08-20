@@ -6,7 +6,8 @@ import Config from '../../../config/config'
 import {
   UPDATE_WORLD_MUTATION,
   WORLD_SUBSCRIPTION,
-  UPDATE_BLOCK_MUTATION
+  UPDATE_BLOCK_MUTATION,
+  BLOCK_SUBSCRIPTION
   // OTHER_PLAYERS_SUBSCRIPTION
 } from '../../../lib/graphql'
 
@@ -89,6 +90,24 @@ class World extends Stateful {
       .subscribe({
         next: ({ data }) => {
           this.handleServerUpdate(data)
+        },
+        error(e) {
+          Helpers.error(e.message)
+        }
+      })
+
+    this.blockSubscription = this.apolloClient
+      .subscribe({
+        query: BLOCK_SUBSCRIPTION,
+        variables: {
+          worldId: this.data.id
+        }
+      })
+      .subscribe({
+        next: ({ data }) => {
+          console.log('BLOCK', data)
+          this.updateChanged(data)
+          // this.handleServerUpdate(data)
         },
         error(e) {
           Helpers.error(e.message)
@@ -245,7 +264,6 @@ class World extends Stateful {
     if (!this.targetBlock) return // do nothing if no blocks are selected
 
     const todo = obtainedType => {
-      console.log(obtainedType)
       if (obtainedType === 0 || !shouldGetBlock) return
       this.player.obtain(obtainedType, 1)
     }
@@ -277,12 +295,10 @@ class World extends Stateful {
     const parentChunk = this.chunkManager.getChunkFromCoords(cx, cy, cz)
 
     const { x, y, z } = block
-    // console.log(parentChunk.getBlock(x, y, z))
+
     if (this.chunkManager.checkBusyBlock(x, y, z)) return
     this.chunkManager.tagBusyBlock(x, y, z)
-    console.log(type, this.data.id, mappedBlock)
     // Communicating with server
-
     this.apolloClient
       .mutate({
         mutation: UPDATE_BLOCK_MUTATION,
@@ -297,6 +313,68 @@ class World extends Stateful {
         todo(obtainedType)
       })
       .catch(err => console.error(err))
+  }
+
+  updateChanged = ({ block }) => {
+    console.log('UPDATE SUBSCRIPTION', block)
+    if (!block) return
+    const { node } = block
+
+    const { coordx, coordy, coordz } = Helpers.globalBlockToChunkCoords(node)
+    const chunkBlock = Helpers.globalBlockToChunkBlock(node)
+    const { type, x: mx, y: my, z: mz } = node
+
+    const targetChunk = this.chunkManager.getChunkFromCoords(
+      coordx,
+      coordy,
+      coordz
+    )
+    targetChunk.setBlock(chunkBlock.x, chunkBlock.y, chunkBlock.z, type)
+
+    this.chunkManager.markCB({
+      type,
+      x: mx,
+      y: my,
+      z: mz
+    })
+    ;[['x', 'coordx'], ['y', 'coordy'], ['z', 'coordz']].forEach(([a, c]) => {
+      const nc = { coordx, coordy, coordz }
+      const nb = { ...chunkBlock }
+      let neighborAffected = false
+
+      // If block is either on 0 or size, that means it has effects on neighboring chunks too.
+      if (nb[a] === 0) {
+        nc[c] -= 1
+        nb[a] = CHUNK_SIZE
+        neighborAffected = true
+      } else if (nb[a] === CHUNK_SIZE - 1) {
+        nc[c] += 1
+        nb[a] = -1
+        neighborAffected = true
+      }
+      if (neighborAffected) {
+        const neighborChunk = this.chunkManager.getChunkFromCoords(
+          nc.coordx,
+          nc.coordy,
+          nc.coordz
+        )
+
+        // Setting neighbor's block that represents self.
+        neighborChunk.setBlock(nb.x, nb.y, nb.z, type)
+        this.workerManager.queueGeneralChunk({
+          cmd: 'UPDATE_BLOCK',
+          data: neighborChunk.getData(),
+          block: nb,
+          chunkName: neighborChunk.getRep()
+        })
+      }
+    })
+    this.workerManager.queueGeneralChunk({
+      cmd: 'UPDATE_BLOCK',
+      data: targetChunk.getData(),
+      block: chunkBlock,
+      chunkName: targetChunk.getRep()
+    })
   }
 }
 

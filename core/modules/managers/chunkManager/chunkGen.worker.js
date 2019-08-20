@@ -117,7 +117,78 @@ self.onmessage = function(e) {
 
       break
     }
+    case 'UPDATE_BLOCK': {
+      console.log('UPDATE BLOCK', e.data)
 
+      const { chunkName, block } = e.data
+
+      const blocks = ndarray(new Uint8Array((SIZE + NEIGHBOR_WIDTH * 2) ** 3), [
+        SIZE + NEIGHBOR_WIDTH * 2,
+        SIZE + NEIGHBOR_WIDTH * 2,
+        SIZE + NEIGHBOR_WIDTH * 2
+      ])
+
+      const lighting = ndarray(new Uint8Array(SIZE ** 3 * 6), [
+        SIZE,
+        SIZE,
+        SIZE,
+        6
+      ])
+
+      const smoothLighting = ndarray(new Uint8Array(SIZE ** 3 * 6 * 3 * 3), [
+        SIZE,
+        SIZE,
+        SIZE,
+        6,
+        3,
+        3
+      ])
+
+      self.generator.setVoxelData(blocks, block.x, block.y, block.z)
+      self.lightingManager.setLightingData(
+        lighting,
+        smoothLighting,
+        blocks,
+        block.x,
+        block.y,
+        block.z
+      )
+
+      const dims = [
+        SIZE + NEIGHBOR_WIDTH * 2,
+        SIZE + NEIGHBOR_WIDTH * 2,
+        SIZE + NEIGHBOR_WIDTH * 2
+      ]
+      if (blocks.data.find(ele => ele)) {
+        const planes = Mesher.calcPlanes(
+          blocks,
+          lighting,
+          smoothLighting,
+          dims,
+          block.x,
+          block.y,
+          block.z
+        )
+        const meshData = Mesher.generateMeshData(planes, self.geometryManager)
+        self.postMessage({
+          cmd,
+          blocks: blocks.data,
+          meshData,
+          block,
+          chunkName
+        })
+      } else {
+        self.postMessage({
+          cmd,
+          blocks,
+          planes: [],
+          block,
+          chunkName
+        })
+      }
+
+      break
+    }
     default:
       break
   }

@@ -43,10 +43,23 @@ function Chunk(x, y, z) {
   this.getMesh = () => mesh
   this.getLoading = () => loading
   this.getIsInScene = () => isInScene
+  this.setBlock = (bx, by, bz, type) => {
+    if (!data) return
+    data.set(
+      bx + NEIGHBOR_WIDTH,
+      by + NEIGHBOR_WIDTH,
+      bz + NEIGHBOR_WIDTH,
+      type
+    )
+  }
   this.getBlock = (bx, by, bz) => {
     try {
       return data
-        ? data.get(bx + NEIGHBOR_WIDTH, bz + NEIGHBOR_WIDTH, by + NEIGHBOR_WIDTH)
+        ? data.get(
+            bx + NEIGHBOR_WIDTH,
+            bz + NEIGHBOR_WIDTH,
+            by + NEIGHBOR_WIDTH
+          )
         : undefined
     } catch (e) {
       return 0

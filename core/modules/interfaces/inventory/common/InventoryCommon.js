@@ -14,7 +14,6 @@ class InventoryCommon {
   }
 
   add = (type, count) => {
-    console.log('add', type, count)
     let tempCount = count
 
     // Appending to existing slots with same type
@@ -27,7 +26,6 @@ class InventoryCommon {
         tempCount = leftover
       } else if (slot.type === type) {
         if (slot.isFull) continue
-
         const leftover = slot.append(tempCount)
 
         if (!leftover) return 0

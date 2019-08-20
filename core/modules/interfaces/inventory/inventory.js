@@ -62,14 +62,7 @@ class Inventory {
   add = (type, count) => {
     if (count === 0) return
 
-    const leftover = this.hotbar.add(type, count)
-    // if (leftover) leftover = this.backpack.add(type, count)
-
-    // This means inventory is changed.
-    if (leftover !== count) {
-      // TODO: implement backpack
-      // this.updateInventory()
-    }
+    this.hotbar.add(type, count)
   }
 
   getInventoryToDatabase = () => {
