@@ -43,23 +43,21 @@ class MouseControl {
           break
         }
         case 2: {
-          // console.log('MOUSE 2')
           // Right Key
-          //   if (!this.canPlaceBlock) break
+          if (!this.canPlaceBlock) break
 
-          //   const type = this.player.inventory.getHand()
-          //   console.log(type)
-          //   if (!type) return
+          const type = this.player.inventory.getHand()
+          if (!type) return
 
-          //   // TODO: CHECK IF BLOCK IS PLACABLE
-          //   if (this.status.isCreative) this.world.placeBlock(type, false)
-          //   else if (this.status.isSurvival) this.world.placeBlock(type)
+          // TODO: CHECK IF BLOCK IS PLACABLE
+          if (this.status.isCreative) this.world.placeBlock(type, false)
+          else if (this.status.isSurvival) this.world.placeBlock(type)
 
-          //   this.canPlaceBlock = false
-          //   const canPlaceBlockTimeout = window.requestTimeout(() => {
-          //     this.canPlaceBlock = true
-          //     window.clearRequestTimeout(canPlaceBlockTimeout)
-          //   }, 200)
+          this.canPlaceBlock = false
+          const canPlaceBlockTimeout = window.requestTimeout(() => {
+            this.canPlaceBlock = true
+            window.clearRequestTimeout(canPlaceBlockTimeout)
+          }, 200)
 
           break
         }
@@ -87,12 +85,10 @@ class MouseControl {
     }
   }
 
-  // _startBreakingBlock = () => {
-  //     const info = this.world.getTargetBlockInfo()
+  // startBreakingBlock = () => {
+  //   const type = this.world.getTargetBlockType
 
-  //     if (!info) return
-
-  //     const { type } = info
+  //     if (!type) return
 
   //     if (type === 0) return
   //     // TODO: TOOLS

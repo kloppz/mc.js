@@ -65,6 +65,10 @@ class Inventory {
     this.hotbar.add(type, count)
   }
 
+  takeFromHand = amount => {
+    this.hotbar.takeFromHand(amount)
+  }
+
   getInventoryToDatabase = () => {
     return `ARMOR:0;0;0;0|BACKPACK:0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;0,0;|${this.hotbar.getDatabaseRepresentation(
       'HOTBAR'

@@ -217,6 +217,10 @@ class Player extends Stateful {
     this.inventory.add(type, count)
   }
 
+  takeFromHand = amount => {
+    this.inventory.takeFromHand(amount)
+  }
+
   /* -------------------------------------------------------------------------- */
   /*                                   GETTERS                                  */
   /* -------------------------------------------------------------------------- */

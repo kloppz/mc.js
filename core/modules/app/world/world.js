@@ -271,6 +271,16 @@ class World extends Stateful {
     this.updateBlock(0, this.targetBlock, todo)
   }
 
+  placeBlock = (type, shouldTakeBlock = true) => {
+    if (!this.potentialBlock) return
+
+    const todo = () => {
+      if (shouldTakeBlock) this.player.takeFromHand(1)
+    }
+
+    this.updateBlock(type, this.potentialBlock, todo)
+  }
+
   /**
    * General function controlling the worker task distribution
    * of placing/breaking blocks.
