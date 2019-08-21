@@ -44,8 +44,8 @@ function Chunk(x, y, z) {
     if (!data) return
     data.set(
       bx + NEIGHBOR_WIDTH,
-      by + NEIGHBOR_WIDTH,
       bz + NEIGHBOR_WIDTH,
+      by + NEIGHBOR_WIDTH,
       type
     )
   }

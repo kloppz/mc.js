@@ -29,6 +29,7 @@ class World extends Stateful {
     super({ isSetup: false })
 
     const { id, name, seed, type, time, days, changedBlocks } = worldData
+
     this.id = id
     this.data = {
       id,
@@ -310,14 +311,18 @@ class World extends Stateful {
     if (this.chunkManager.checkBusyBlock(x, y, z)) return
     this.chunkManager.tagBusyBlock(x, y, z)
 
+    const apolloPackage = {
+      type,
+      ...mappedBlock
+    }
+
     // Communicating with server
     this.apolloClient
       .mutate({
         mutation: UPDATE_BLOCK_MUTATION,
         variables: {
           worldId: this.data.id,
-          type,
-          ...mappedBlock
+          ...apolloPackage
         }
       })
       .then(() => {
@@ -325,11 +330,19 @@ class World extends Stateful {
         todo(obtainedType)
       })
       .catch(err => console.error(err))
+
+    this.updateChanged({
+      block: {
+        node: apolloPackage
+      }
+    })
   }
 
   updateChanged = ({ block }) => {
     if (!block) return
     const { node } = block
+
+    console.log(node)
 
     const { coordx, coordy, coordz } = Helpers.globalBlockToChunkCoords(node)
     const chunkBlock = Helpers.globalBlockToChunkBlock(node)
@@ -340,6 +353,15 @@ class World extends Stateful {
       coordy,
       coordz
     )
+
+    // TODO: HANDLE IF TARGET CHUNK IS UNDEFINED
+    const currentType = targetChunk.getBlock(
+      chunkBlock.x,
+      chunkBlock.y,
+      chunkBlock.z
+    )
+    if (currentType === type) return
+
     targetChunk.setBlock(chunkBlock.x, chunkBlock.y, chunkBlock.z, type)
 
     const changedBlock = {
@@ -355,16 +377,16 @@ class World extends Stateful {
       const nb = { ...chunkBlock }
       let neighborAffected = false
 
-      if (nb[a] >= 0 && nb[a] <= NEIGHBOR_WIDTH - 1) {
+      if (nb[a] >= 0 && nb[a] < NEIGHBOR_WIDTH) {
         nc[c] -= 1
-        nb[a] = CHUNK_SIZE + 2 * NEIGHBOR_WIDTH - 1 - nb[a]
+        nb[a] = CHUNK_SIZE + nb[a]
         neighborAffected = true
       } else if (
-        nb[a] >= CHUNK_SIZE + NEIGHBOR_WIDTH - 1 &&
-        nb[a] <= CHUNK_SIZE + 2 * NEIGHBOR_WIDTH - 1
+        nb[a] <= CHUNK_SIZE - 1 &&
+        nb[a] > CHUNK_SIZE - 1 - NEIGHBOR_WIDTH
       ) {
         nc[c] += 1
-        nb[a] -= CHUNK_SIZE + 2 * NEIGHBOR_WIDTH - 1
+        nb[a] -= CHUNK_SIZE
         neighborAffected = true
       }
 

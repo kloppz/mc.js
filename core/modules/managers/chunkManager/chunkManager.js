@@ -114,8 +114,6 @@ class ChunkManager {
   }
 
   markCB = ({ type, x, y, z }) => {
-    if (type === 0) return
-
     this.cbDict[this.getChunkRep(x, y, z)] = type
   }
 
