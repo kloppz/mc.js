@@ -13,7 +13,8 @@ function WorkerPool(Worker, callback, config) {
   // TODO: Figure out what's wrong with this
   const maxGWorkers =
     navigator.hardwareConcurrency || Config.world.maxWorkerCount
-  const maxSWorkers = 2
+  const maxSWorkers =
+    navigator.hardwareConcurrency || Config.world.maxWorkerCount
 
   function nextGJob(index) {
     // No job

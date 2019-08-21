@@ -58,7 +58,6 @@ class WorkerManager {
         break
       }
       case 'UPDATE_BLOCK': {
-        console.log('UPDATED', data)
         const {
           changedBlock: { x, y, z },
           meshData,

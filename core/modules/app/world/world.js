@@ -170,6 +170,164 @@ class World extends Stateful {
     }
   }
 
+  breakBlock = (shouldGetBlock = true) => {
+    if (!this.targetBlock) return // do nothing if no blocks are selected
+
+    const todo = obtainedType => {
+      if (obtainedType === 0 || !shouldGetBlock) return
+      this.player.obtain(obtainedType, 1)
+    }
+
+    this.updateBlock(0, this.targetBlock, todo)
+  }
+
+  placeBlock = (type, shouldTakeBlock = true) => {
+    if (!this.potentialBlock) return
+
+    const todo = () => {
+      if (shouldTakeBlock) this.player.takeFromHand(1)
+    }
+
+    this.updateBlock(type, this.potentialBlock, todo)
+  }
+
+  /**
+   * General function controlling the worker task distribution
+   * of placing/breaking blocks.
+   *
+   * @param {Int} type - Type of the prompted block.
+   * @param {Object} blockData - Information about the prompted block
+   *                    such as chunk coordinates and block position.
+   * @param {Function} todo - Callback to be called after notifying the
+   *                    workers about the changes to regenerate.
+   */
+  updateBlock = (type, blockData, todo) => {
+    const {
+      chunk: { cx, cy, cz },
+      block
+    } = blockData
+
+    const { x, y, z } = block
+
+    const mappedBlock = {
+      x: cx * CHUNK_SIZE + x,
+      y: cy * CHUNK_SIZE + y,
+      z: cz * CHUNK_SIZE + z
+    }
+    const parentChunk = this.chunkManager.getChunkFromCoords(cx, cy, cz)
+    const originalType = parentChunk.getBlock(x, y, z)
+
+    if (this.chunkManager.checkBusyBlock(x, y, z)) return
+    this.chunkManager.tagBusyBlock(x, y, z)
+
+    const apolloPackage = {
+      type,
+      ...mappedBlock
+    }
+
+    // Communicating with server
+    this.apolloClient
+      .mutate({
+        mutation: UPDATE_BLOCK_MUTATION,
+        variables: {
+          worldId: this.data.id,
+          ...apolloPackage
+        }
+      })
+      .then(() => {
+        todo(originalType)
+      })
+      .catch(err => console.error(err))
+
+    this.updateChanged({
+      block: {
+        node: apolloPackage
+      }
+    })
+  }
+
+  updateChanged = ({ block }) => {
+    if (!block) return
+    const { node } = block
+
+    const { coordx, coordy, coordz } = Helpers.globalBlockToChunkCoords(node)
+    const chunkBlock = Helpers.globalBlockToChunkBlock(node)
+    const { type, x: mx, y: my, z: mz } = node
+
+    const targetChunk = this.chunkManager.getChunkFromCoords(
+      coordx,
+      coordy,
+      coordz
+    )
+
+    const currentType = targetChunk.getBlock(
+      chunkBlock.x,
+      chunkBlock.y,
+      chunkBlock.z
+    )
+    if (currentType === type) return
+
+    targetChunk.setBlock(chunkBlock.x, chunkBlock.y, chunkBlock.z, type)
+
+    const changedBlock = {
+      type,
+      x: mx,
+      y: my,
+      z: mz
+    }
+
+    this.chunkManager.markCB(changedBlock)
+    ;[['x', 'coordx'], ['y', 'coordy'], ['z', 'coordz']].forEach(([a, c]) => {
+      const nc = { coordx, coordy, coordz }
+      const nb = { ...chunkBlock }
+      let neighborAffected = false
+
+      if (nb[a] >= 0 && nb[a] < NEIGHBOR_WIDTH) {
+        nc[c] -= 1
+        nb[a] = CHUNK_SIZE + nb[a]
+        neighborAffected = true
+      } else if (
+        nb[a] <= CHUNK_SIZE - 1 &&
+        nb[a] > CHUNK_SIZE - 1 - NEIGHBOR_WIDTH
+      ) {
+        nc[c] += 1
+        nb[a] -= CHUNK_SIZE
+        neighborAffected = true
+      }
+
+      if (neighborAffected) {
+        let neighborChunk = this.chunkManager.getChunkFromCoords(
+          nc.coordx,
+          nc.coordy,
+          nc.coordz
+        )
+
+        if (!neighborChunk)
+          neighborChunk = this.chunkManager.makeChunk(
+            nc.coordx,
+            nc.coordy,
+            nc.coordz
+          )
+
+        // Setting neighbor's block that represents self.
+        neighborChunk.setBlock(nb.x, nb.y, nb.z, type)
+        this.workerManager.queueSpecificChunk({
+          cmd: 'UPDATE_BLOCK',
+          data: neighborChunk.getData().data,
+          changedBlock,
+          chunkName: neighborChunk.getRep()
+        })
+      }
+    })
+
+    this.workerManager.queueSpecificChunk({
+      cmd: 'UPDATE_BLOCK',
+      data: targetChunk.getData().data,
+      changedBlock,
+      chunkName: targetChunk.getRep()
+    })
+  }
+
   terminate = () => {
     this.worldSubscription.unsubscribe()
 
@@ -261,160 +419,6 @@ class World extends Stateful {
   }
 
   getIsReady = () => this.chunkManager.isReady
-
-  breakBlock = (shouldGetBlock = true) => {
-    if (!this.targetBlock) return // do nothing if no blocks are selected
-
-    const todo = obtainedType => {
-      if (obtainedType === 0 || !shouldGetBlock) return
-      this.player.obtain(obtainedType, 1)
-    }
-
-    this.updateBlock(0, this.targetBlock, todo)
-  }
-
-  placeBlock = (type, shouldTakeBlock = true) => {
-    if (!this.potentialBlock) return
-
-    const todo = () => {
-      if (shouldTakeBlock) this.player.takeFromHand(1)
-    }
-
-    this.updateBlock(type, this.potentialBlock, todo)
-  }
-
-  /**
-   * General function controlling the worker task distribution
-   * of placing/breaking blocks.
-   *
-   * @param {Int} type - Type of the prompted block.
-   * @param {Object} blockData - Information about the prompted block
-   *                    such as chunk coordinates and block position.
-   * @param {Function} todo - Callback to be called after notifying the
-   *                    workers about the changes to regenerate.
-   */
-  updateBlock = (type, blockData, todo) => {
-    const {
-      chunk: { cx, cy, cz },
-      block
-    } = blockData
-
-    const { x, y, z } = block
-
-    const mappedBlock = {
-      x: cx * CHUNK_SIZE + x,
-      y: cy * CHUNK_SIZE + y,
-      z: cz * CHUNK_SIZE + z
-    }
-    const parentChunk = this.chunkManager.getChunkFromCoords(cx, cy, cz)
-
-    if (this.chunkManager.checkBusyBlock(x, y, z)) return
-    this.chunkManager.tagBusyBlock(x, y, z)
-
-    const apolloPackage = {
-      type,
-      ...mappedBlock
-    }
-
-    // Communicating with server
-    this.apolloClient
-      .mutate({
-        mutation: UPDATE_BLOCK_MUTATION,
-        variables: {
-          worldId: this.data.id,
-          ...apolloPackage
-        }
-      })
-      .then(() => {
-        const obtainedType = parentChunk.getBlock(x, y, z)
-        todo(obtainedType)
-      })
-      .catch(err => console.error(err))
-
-    this.updateChanged({
-      block: {
-        node: apolloPackage
-      }
-    })
-  }
-
-  updateChanged = ({ block }) => {
-    if (!block) return
-    const { node } = block
-
-    console.log(node)
-
-    const { coordx, coordy, coordz } = Helpers.globalBlockToChunkCoords(node)
-    const chunkBlock = Helpers.globalBlockToChunkBlock(node)
-    const { type, x: mx, y: my, z: mz } = node
-
-    const targetChunk = this.chunkManager.getChunkFromCoords(
-      coordx,
-      coordy,
-      coordz
-    )
-
-    // TODO: HANDLE IF TARGET CHUNK IS UNDEFINED
-    const currentType = targetChunk.getBlock(
-      chunkBlock.x,
-      chunkBlock.y,
-      chunkBlock.z
-    )
-    if (currentType === type) return
-
-    targetChunk.setBlock(chunkBlock.x, chunkBlock.y, chunkBlock.z, type)
-
-    const changedBlock = {
-      type,
-      x: mx,
-      y: my,
-      z: mz
-    }
-
-    this.chunkManager.markCB(changedBlock)
-    ;[['x', 'coordx'], ['y', 'coordy'], ['z', 'coordz']].forEach(([a, c]) => {
-      const nc = { coordx, coordy, coordz }
-      const nb = { ...chunkBlock }
-      let neighborAffected = false
-
-      if (nb[a] >= 0 && nb[a] < NEIGHBOR_WIDTH) {
-        nc[c] -= 1
-        nb[a] = CHUNK_SIZE + nb[a]
-        neighborAffected = true
-      } else if (
-        nb[a] <= CHUNK_SIZE - 1 &&
-        nb[a] > CHUNK_SIZE - 1 - NEIGHBOR_WIDTH
-      ) {
-        nc[c] += 1
-        nb[a] -= CHUNK_SIZE
-        neighborAffected = true
-      }
-
-      if (neighborAffected) {
-        const neighborChunk = this.chunkManager.getChunkFromCoords(
-          nc.coordx,
-          nc.coordy,
-          nc.coordz
-        )
-
-        // Setting neighbor's block that represents self.
-        neighborChunk.setBlock(nb.x, nb.y, nb.z, type)
-        this.workerManager.queueSpecificChunk({
-          cmd: 'UPDATE_BLOCK',
-          data: neighborChunk.getData().data,
-          changedBlock,
-          chunkName: neighborChunk.getRep()
-        })
-      }
-    })
-
-    this.workerManager.queueSpecificChunk({
-      cmd: 'UPDATE_BLOCK',
-      data: targetChunk.getData().data,
-      changedBlock,
-      chunkName: targetChunk.getRep()
-    })
-  }
 }
 
 export default World

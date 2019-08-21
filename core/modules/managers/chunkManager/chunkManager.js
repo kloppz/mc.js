@@ -122,6 +122,8 @@ class ChunkManager {
     this.chunks[this.getChunkRep(x, y, z)] = newChunk
 
     this.tagDirtyChunk(x, y, z)
+
+    return newChunk
   }
 
   setupChunk = (cx, cy, cz) => {
@@ -152,6 +154,12 @@ class ChunkManager {
 
   tagDirtyChunk = (x, y, z) => this.dirtyChunks.push([x, y, z])
 
+  tagBusyBlock = (x, y, z) =>
+    (this.blocksInProgress[Helpers.get3DCoordsRep(x, y, z)] = true)
+
+  untagBusyBlock = (x, y, z) =>
+    delete this.blocksInProgress[Helpers.get3DCoordsRep(x, y, z)]
+
   /* -------------------------------------------------------------------------- */
   /*                                   GETTERS                                  */
   /* -------------------------------------------------------------------------- */
@@ -179,12 +187,6 @@ class ChunkManager {
 
   checkBusyBlock = (x, y, z) =>
     this.blocksInProgress[Helpers.get3DCoordsRep(x, y, z)]
-
-  tagBusyBlock = (x, y, z) =>
-    (this.blocksInProgress[Helpers.get3DCoordsRep(x, y, z)] = true)
-
-  untagBusyBlock = (x, y, z) =>
-    delete this.blocksInProgress[Helpers.get3DCoordsRep(x, y, z)]
 }
 
 export default ChunkManager
