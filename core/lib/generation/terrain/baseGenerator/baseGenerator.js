@@ -25,8 +25,9 @@ export default class BaseGenerator {
     this.seed = hash
   }
 
-  registerCB = () => {
-    // TODO
+  registerCB = (x, y, z, type) => {
+    const rep = Helpers.get3DCoordsRep(x, y, z)
+    this.changedBlocks[rep] = type
   }
 
   /* -------------------------------------------------------------------------- */

@@ -5,6 +5,7 @@ import {
 import GeometryManager from '../resourceManager/geometryManager'
 import LightingManager from '../lightingManager/lightingManager'
 import Config from '../../../config/config'
+import Helpers from '../../../utils/helpers'
 
 import Mesher from './mesher'
 
@@ -118,11 +119,13 @@ self.onmessage = function(e) {
       break
     }
     case 'UPDATE_BLOCK': {
-      console.log('UPDATE BLOCK', e.data)
+      const { chunkName, changedBlock, data } = e.data
+      const { x, y, z, type } = changedBlock
+      const { x: cx, y: cy, z: cz } = Helpers.get3DCoordsFromRep(chunkName)
 
-      const { chunkName, block } = e.data
+      self.generator.registerCB(x, y, z, type)
 
-      const blocks = ndarray(new Uint8Array((SIZE + NEIGHBOR_WIDTH * 2) ** 3), [
+      const blocks = ndarray(data, [
         SIZE + NEIGHBOR_WIDTH * 2,
         SIZE + NEIGHBOR_WIDTH * 2,
         SIZE + NEIGHBOR_WIDTH * 2
@@ -144,14 +147,13 @@ self.onmessage = function(e) {
         3
       ])
 
-      self.generator.setVoxelData(blocks, block.x, block.y, block.z)
       self.lightingManager.setLightingData(
         lighting,
         smoothLighting,
         blocks,
-        block.x,
-        block.y,
-        block.z
+        cx,
+        cy,
+        cz
       )
 
       const dims = [
@@ -165,24 +167,22 @@ self.onmessage = function(e) {
           lighting,
           smoothLighting,
           dims,
-          block.x,
-          block.y,
-          block.z
+          cx,
+          cy,
+          cz
         )
         const meshData = Mesher.generateMeshData(planes, self.geometryManager)
         self.postMessage({
           cmd,
-          blocks: blocks.data,
+          changedBlock,
           meshData,
-          block,
           chunkName
         })
       } else {
         self.postMessage({
           cmd,
-          blocks,
+          changedBlock,
           planes: [],
-          block,
           chunkName
         })
       }

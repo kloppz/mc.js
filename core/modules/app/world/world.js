@@ -14,6 +14,8 @@ import {
 import createSky from './sky/sky'
 
 const CHUNK_SIZE = Config.chunk.size
+const NEIGHBOR_WIDTH = Config.chunk.neighborWidth
+
 class World extends Stateful {
   constructor(
     worldData,
@@ -105,7 +107,6 @@ class World extends Stateful {
       })
       .subscribe({
         next: ({ data }) => {
-          console.log('BLOCK', data)
           this.updateChanged(data)
           // this.handleServerUpdate(data)
         },
@@ -297,17 +298,18 @@ class World extends Stateful {
       block
     } = blockData
 
+    const { x, y, z } = block
+
     const mappedBlock = {
-      x: cx * CHUNK_SIZE + block.x,
-      y: cy * CHUNK_SIZE + block.y,
-      z: cz * CHUNK_SIZE + block.z
+      x: cx * CHUNK_SIZE + x,
+      y: cy * CHUNK_SIZE + y,
+      z: cz * CHUNK_SIZE + z
     }
     const parentChunk = this.chunkManager.getChunkFromCoords(cx, cy, cz)
 
-    const { x, y, z } = block
-
     if (this.chunkManager.checkBusyBlock(x, y, z)) return
     this.chunkManager.tagBusyBlock(x, y, z)
+
     // Communicating with server
     this.apolloClient
       .mutate({
@@ -326,7 +328,6 @@ class World extends Stateful {
   }
 
   updateChanged = ({ block }) => {
-    console.log('UPDATE SUBSCRIPTION', block)
     if (!block) return
     const { node } = block
 
@@ -341,27 +342,32 @@ class World extends Stateful {
     )
     targetChunk.setBlock(chunkBlock.x, chunkBlock.y, chunkBlock.z, type)
 
-    this.chunkManager.markCB({
+    const changedBlock = {
       type,
       x: mx,
       y: my,
       z: mz
-    })
+    }
+
+    this.chunkManager.markCB(changedBlock)
     ;[['x', 'coordx'], ['y', 'coordy'], ['z', 'coordz']].forEach(([a, c]) => {
       const nc = { coordx, coordy, coordz }
       const nb = { ...chunkBlock }
       let neighborAffected = false
 
-      // If block is either on 0 or size, that means it has effects on neighboring chunks too.
-      if (nb[a] === 0) {
+      if (nb[a] >= 0 && nb[a] <= NEIGHBOR_WIDTH - 1) {
         nc[c] -= 1
-        nb[a] = CHUNK_SIZE
+        nb[a] = CHUNK_SIZE + 2 * NEIGHBOR_WIDTH - 1 - nb[a]
         neighborAffected = true
-      } else if (nb[a] === CHUNK_SIZE - 1) {
+      } else if (
+        nb[a] >= CHUNK_SIZE + NEIGHBOR_WIDTH - 1 &&
+        nb[a] <= CHUNK_SIZE + 2 * NEIGHBOR_WIDTH - 1
+      ) {
         nc[c] += 1
-        nb[a] = -1
+        nb[a] -= CHUNK_SIZE + 2 * NEIGHBOR_WIDTH - 1
         neighborAffected = true
       }
+
       if (neighborAffected) {
         const neighborChunk = this.chunkManager.getChunkFromCoords(
           nc.coordx,
@@ -371,18 +377,19 @@ class World extends Stateful {
 
         // Setting neighbor's block that represents self.
         neighborChunk.setBlock(nb.x, nb.y, nb.z, type)
-        this.workerManager.queueGeneralChunk({
+        this.workerManager.queueSpecificChunk({
           cmd: 'UPDATE_BLOCK',
-          data: neighborChunk.getData(),
-          block: nb,
+          data: neighborChunk.getData().data,
+          changedBlock,
           chunkName: neighborChunk.getRep()
         })
       }
     })
-    this.workerManager.queueGeneralChunk({
+
+    this.workerManager.queueSpecificChunk({
       cmd: 'UPDATE_BLOCK',
-      data: targetChunk.getData(),
-      block: chunkBlock,
+      data: targetChunk.getData().data,
+      changedBlock,
       chunkName: targetChunk.getRep()
     })
   }

@@ -16,6 +16,9 @@ function Chunk(x, y, z) {
 
   const rep = Helpers.get3DCoordsRep(x, y, z)
 
+  /* -------------------------------------------------------------------------- */
+  /*                                   SETTERS                                  */
+  /* -------------------------------------------------------------------------- */
   this.setData = blocks => {
     data = ndarray(blocks, [
       SIZE + NEIGHBOR_WIDTH * 2,
@@ -37,12 +40,6 @@ function Chunk(x, y, z) {
   }
   this.setLoading = bool => (loading = bool)
   this.setIsInScene = bool => (isInScene = bool)
-
-  this.getData = () => data
-  this.getRep = () => rep
-  this.getMesh = () => mesh
-  this.getLoading = () => loading
-  this.getIsInScene = () => isInScene
   this.setBlock = (bx, by, bz, type) => {
     if (!data) return
     data.set(
@@ -52,6 +49,15 @@ function Chunk(x, y, z) {
       type
     )
   }
+
+  /* -------------------------------------------------------------------------- */
+  /*                                   GETTERS                                  */
+  /* -------------------------------------------------------------------------- */
+  this.getData = () => data
+  this.getRep = () => rep
+  this.getMesh = () => mesh
+  this.getLoading = () => loading
+  this.getIsInScene = () => isInScene
   this.getBlock = (bx, by, bz) => {
     try {
       return data

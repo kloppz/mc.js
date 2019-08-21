@@ -52,7 +52,7 @@ class ChunkManager {
     this.workerManager.initChunkPool(ChunkGenWorker, this, {
       seed: this.world.data.seed,
       type: this.world.data.type,
-      changedBlocks
+      changedBlocks: this.cbDict
     })
   }
 
