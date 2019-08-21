@@ -163,6 +163,8 @@ export default class ClassicGenerator extends BaseGenerator {
 
             for (let b = 0; b < data.length; b++) {
               const { override, type: treeB, x: dx, y: dy, z: dz } = data[b]
+              if (this.isCBAt(x + dx, maxHeight + dy, z + dz)) continue
+
               const mappedCoords = Helpers.getRelativeCoords(
                 x + dx,
                 maxHeight + dy,

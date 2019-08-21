@@ -30,6 +30,11 @@ export default class BaseGenerator {
     this.changedBlocks[rep] = type
   }
 
+  isCBAt = (x, y, z) => {
+    const cb = this.getCBAt(x, y, z)
+    return Number.isInteger(cb)
+  }
+
   /* -------------------------------------------------------------------------- */
   /*                                   GETTERS                                  */
   /* -------------------------------------------------------------------------- */
